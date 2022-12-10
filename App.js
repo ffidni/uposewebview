@@ -200,6 +200,7 @@ const App = () => {
         await asyncPrintText(BLEPrinter, '\n\n', waitTime++);
         setPrintData([]);
       } else {
+        console.log('error');
         setPrinterError(true);
       }
     }
@@ -211,7 +212,7 @@ const App = () => {
    * - apakah printer yang disave ada
    */
 
-  const getPrinters = async (isReturn = false) => {
+  const getPrinters = async (isReturn = false, validate = true) => {
     setLoading(true);
     setBluetoothError(false);
     let devices = await USBPrinter.init()
@@ -227,7 +228,7 @@ const App = () => {
           });
       })
       .catch(err => {
-        setPrinterError(true);
+        if (validate) setPrinterError(true);
         console.log(err);
       });
     if (!devices) {
@@ -245,9 +246,11 @@ const App = () => {
             });
         })
         .catch(err => {
-          setPrinterError(true);
-          setBluetoothError(true);
-          setLoading(false);
+          if (validate) {
+            setPrinterError(true);
+            setBluetoothError(true);
+            setLoading(false);
+          }
           // Alert.alert('Error', 'Bluetooth belum dinyalakan!');
         });
     }
@@ -282,6 +285,7 @@ const App = () => {
   // }, [printers]);
 
   useEffect(() => {
+    console.log(printerError);
     if (printerError) {
       setSavedPrinter(null);
       setCurrentPrinter(null);
@@ -297,7 +301,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    getPrinters();
+    getPrinters(false, false);
     getPrinter();
   }, []);
 
@@ -351,7 +355,14 @@ const App = () => {
 
   return (
     <SafeAreaView style={{flex: 1}}>
-      {/* <ScrollView style={{width: '100%'}} contentContainerStyle={{flexGrow: 1}}>
+      {/* <Button
+        title="print smth"
+        onPress={() => {
+          // getPrinters();
+          printReceipt(printData);
+        }}
+      /> */}
+      <ScrollView style={{width: '100%'}} contentContainerStyle={{flexGrow: 1}}>
         <WebView
           nestedScrollEnabled
           ref={webRef}
@@ -360,7 +371,7 @@ const App = () => {
           onLoadProgress={event => setCanGoBack(event.nativeEvent.canGoBack)}
           setSupportMultipleWindows={false}
         />
-      </ScrollView> */}
+      </ScrollView>
       <Modal transparent visible={printerError}>
         <View
           style={{
@@ -483,13 +494,6 @@ const App = () => {
           </View>
         </View>
       </Modal>
-      <Button
-        title="print smth"
-        onPress={() => {
-          // getPrinters();
-          printReceipt(printData);
-        }}
-      />
     </SafeAreaView>
   );
 };
